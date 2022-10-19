@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "frank2kube.fullname" . }}
+  labels:
+    {{- include "frank2kube.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "frank2kube.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "frank2kube.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "frank2kube.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "nexus.frankframework.org/frank-framework:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: context-config
+              mountPath: /usr/local/tomcat/conf/Catalina/localhost/ROOT.xml
+              subPath: context.xml
+{{/*            - name: frank*/}}
+{{/*              mountPath: /opt/frank/configurations*/}}
+{{/*              subPath: configurations*/}}
+{{/*            - name: frank*/}}
+{{/*              mountPath: /opt/frank/resources*/}}
+{{/*              subPath: resources*/}}
+{{/*            - name: frank*/}}
+{{/*              mountPath: /opt/frank/testtool*/}}
+{{/*              subPath: testtool*/}}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+{{/*          livenessProbe:*/}}
+{{/*            httpGet:*/}}
+{{/*              path: /iaf/api/server/health*/}}
+{{/*              port: http*/}}
+{{/*            initialDelaySeconds: 60*/}}
+{{/*            periodSeconds: 10*/}}
+          env:
+            {{- toYaml .Values.env | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+{{/*      {{- with .Values.nodeSelector }}*/}}
+      volumes:
+        - name: context-config
+          configMap:
+            name: {{ include "frank2kube.fullname" . }}-context-config
+{{/*        - name: frank*/}}
+{{/*          persistentVolumeClaim:*/}}
+{{/*            claimName: task-pv-claim*/}}
+{{/*      nodeSelector:*/}}
+{{/*        {{- toYaml . | nindent 8 }}*/}}
+{{/*      {{- end }}*/}}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

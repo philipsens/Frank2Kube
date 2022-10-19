@@ -1,0 +1,7 @@
+apiVersion: v2
+type: application
+name: frank2kube
+version: 0.1.10
+appVersion: "7.9-SNAPSHOT"
+description: A Helm chart for running the Frank!Framework in Kubernetes
+icon: "https://raw.githubusercontent.com/philipsens/Frank2Kube/master/favicon.svg"
